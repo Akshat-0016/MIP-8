@@ -1,7 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <circuit>
   <version>2</version>
-  <attributes/>
+  <attributes>
+    <entry>
+      <string>shapeType</string>
+      <shapeType>SIMPLE</shapeType>
+    </entry>
+    <entry>
+      <string>romContent</string>
+      <romList>
+        <roms/>
+      </romList>
+    </entry>
+    <entry>
+      <string>Width</string>
+      <int>8</int>
+    </entry>
+  </attributes>
   <visualElements>
     <visualElement>
       <elementName>In</elementName>
@@ -35,16 +50,20 @@
       <elementName>ROM</elementName>
       <elementAttributes>
         <entry>
-          <string>Label</string>
-          <string>ROM</string>
-        </entry>
-        <entry>
           <string>AddrBits</string>
           <int>8</int>
         </entry>
         <entry>
+          <string>Label</string>
+          <string>ROM</string>
+        </entry>
+        <entry>
           <string>Bits</string>
           <int>16</int>
+        </entry>
+        <entry>
+          <string>Data</string>
+          <data>57d</data>
         </entry>
       </elementAttributes>
       <pos x="340" y="160"/>
