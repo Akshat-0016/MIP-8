@@ -75,25 +75,17 @@
           <int>8</int>
         </entry>
         <entry>
-          <string>isProgramMemory</string>
-          <boolean>true</boolean>
-        </entry>
-        <entry>
           <string>Bits</string>
           <int>16</int>
         </entry>
         <entry>
           <string>Data</string>
-          <data>5b7d,0,2000,3000,c07d,50,cc7d,9*0,5678,15*0,9abc,15*0,3000,15*0
+          <data>1c40,0,2000,3000,c07d,50,cc7d,9*0,5678,15*0,9abc,15*0,3000,15*0
 ,c07d,15*0,cc7d</data>
         </entry>
         <entry>
           <string>lastDataFile</string>
           <file>/home/archsage/MIP-8/programs/test.hex</file>
-        </entry>
-        <entry>
-          <string>autoReload</string>
-          <boolean>true</boolean>
         </entry>
       </elementAttributes>
       <pos x="180" y="-180"/>
@@ -106,10 +98,6 @@
     <visualElement>
       <elementName>Clock</elementName>
       <elementAttributes>
-        <entry>
-          <string>runRealTime</string>
-          <boolean>true</boolean>
-        </entry>
         <entry>
           <string>Frequency</string>
           <int>5</int>
