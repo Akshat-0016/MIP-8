@@ -1,13 +1,20 @@
-; MIP-8 2nd assembled program
+; MIP-8 nth assembled program
+
+NOP
 
 LOAD R1, 5
 LOAD R2, 3
+
 ADD R1, R2
-INC R1, R0
-DEC R2, R0
-LOAD R2, 10
-SUB R2, R2
-JZ 10
-LOAD R0, 0
-LOAD R1, 5
+STORE R1, 0x20
+LOAD-MEM R3, 0x20
+
+SUB R1, R2
+AND R1, R2
+OR R1, R2
+XOR R1, R2
+NOT R1, R2
+INC R1, R2
+DEC R1, R2
+
 HALT

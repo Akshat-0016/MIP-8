@@ -33,6 +33,7 @@ OPCODES = {
     "HALT": 0b1111,
 }
 
+
 REGISTERS = {
     "R0": 0b00,
     "R1": 0b01,
@@ -41,44 +42,35 @@ REGISTERS = {
 }
 
 
-def register_number(name: str) -> int:
-    """Convert R0-R3 to its 2-bit register number."""
+def register_number(name):
     name = name.upper()
 
     if name not in REGISTERS:
-        raise ValueError(f"Invalid register: {name}")
+        raise ValueError(f"Unknown register: {name}")
 
     return REGISTERS[name]
 
 
-def opcode_number(name: str) -> int:
-    """Convert mnemonic to its 4-bit opcode."""
+def opcode_number(name):
     name = name.upper()
 
     if name not in OPCODES:
-        raise ValueError(f"Unknown instruction: {name}")
+        raise ValueError(f"Unknown opcode: {name}")
 
     return OPCODES[name]
 
 
-def encode(opcode: int, rd: int = 0, rs: int = 0, imm: int = 0) -> int:
-    """
-    Build one 16-bit MIP-8 instruction.
-
-    Format:
-        opcode | rd | rs | imm
-    """
-
+def encode(opcode, rd=0, rs=0, imm=0):
     if not 0 <= opcode <= 0xF:
-        raise ValueError("Opcode must fit in 4 bits")
+        raise ValueError("Opcode must be 4 bits")
 
     if not 0 <= rd <= 0x3:
-        raise ValueError("RD must fit in 2 bits")
+        raise ValueError("RD must be 2 bits")
 
     if not 0 <= rs <= 0x3:
-        raise ValueError("RS must fit in 2 bits")
+        raise ValueError("RS must be 2 bits")
 
     if not 0 <= imm <= 0xFF:
-        raise ValueError("Immediate must fit in 8 bits")
+        raise ValueError("IMM must be 8 bits")
 
     return (opcode << 12) | (rd << 10) | (rs << 8) | imm

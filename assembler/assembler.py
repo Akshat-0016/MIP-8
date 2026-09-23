@@ -1,7 +1,13 @@
 import sys
 from pathlib import Path
 
-from isa import OPCODES, REGISTERS, encode
+from isa import (
+    OPCODES,
+    REGISTERS,
+    encode,
+    opcode_number,
+    register_number,
+)
 
 
 def parse_number(value):
@@ -13,198 +19,250 @@ def parse_number(value):
     return int(value, 10)
 
 
-def parse_register(value):
-    value = value.strip().upper()
+def clean_line(line):
+    # Remove comments
+    line = line.split(";", 1)[0].strip()
 
-    if value not in REGISTERS:
-        raise ValueError(f"Unknown register: {value}")
+    if not line:
+        return None
 
-    return REGISTERS[value]
+    return line
 
 
-def assemble_instruction(line):
+def parse_register(token):
+    token = token.strip().upper()
+
+    if token not in REGISTERS:
+        raise ValueError(f"Invalid register: {token}")
+
+    return register_number(token)
+
+
+def assemble_line(line):
     parts = line.replace(",", " ").split()
 
     if not parts:
         return None
 
     mnemonic = parts[0].upper()
-    args = parts[1:]
 
     # -------------------------
-    # NOP / HALT
+    # No-operand instructions
     # -------------------------
-    if mnemonic == "NOP":
-        return encode(OPCODES["NOP"])
+    if mnemonic in ("NOP", "HALT"):
+        if len(parts) != 1:
+            raise ValueError(f"{mnemonic} takes no operands")
 
-    if mnemonic == "HALT":
-        return encode(OPCODES["HALT"])
+        return encode(opcode_number(mnemonic))
 
     # -------------------------
-    # LOAD Rn, immediate
-    # RS = 00 means immediate
+    # LOAD immediate
+    # LOAD Rn, imm
     # -------------------------
     if mnemonic == "LOAD":
-        if len(args) != 2:
+        if len(parts) != 3:
             raise ValueError("LOAD syntax: LOAD Rn, immediate")
 
-        rd = parse_register(args[0])
-        imm = parse_number(args[1])
+        rd = parse_register(parts[1])
+        imm = parse_number(parts[2])
 
         if not 0 <= imm <= 0xFF:
-            raise ValueError("Immediate must fit in 8 bits")
+            raise ValueError("Immediate must be 0x00..0xFF")
 
-        return encode(OPCODES["LOAD"], rd=rd, rs=0b00, imm=imm)
-
-    # -------------------------
-    # MOV Rd, Rs
-    # -------------------------
-    if mnemonic == "MOV":
-        if len(args) != 2:
-            raise ValueError("MOV syntax: MOV Rd, Rs")
-
-        rd = parse_register(args[0])
-        rs = parse_register(args[1])
-
-        return encode(OPCODES["MOV"], rd=rd, rs=rs)
+        # RS=00 means immediate
+        return encode(OPCODES["LOAD"], rd=rd, rs=0, imm=imm)
 
     # -------------------------
-    # ALU operations
+    # STORE
+    # STORE Rn, address
+    # -------------------------
+    if mnemonic == "STORE":
+        if len(parts) != 3:
+            raise ValueError("STORE syntax: STORE Rn, address")
+
+        rd = parse_register(parts[1])
+        address = parse_number(parts[2])
+
+        if not 0 <= address <= 0xFF:
+            raise ValueError("Address must be 0x00..0xFF")
+
+        # Hardware verified:
+        # RD = source register
+        # IMM = RAM address
+        # RS = 00
+        return encode(
+            OPCODES["STORE"],
+            rd=rd,
+            rs=0,
+            imm=address,
+        )
+
+    # -------------------------
+    # LOAD-MEM
+    # LOAD-MEM Rn, address
+    # -------------------------
+    if mnemonic == "LOAD-MEM":
+        if len(parts) != 3:
+            raise ValueError("LOAD-MEM syntax: LOAD-MEM Rn, address")
+
+        rd = parse_register(parts[1])
+        address = parse_number(parts[2])
+
+        if not 0 <= address <= 0xFF:
+            raise ValueError("Address must be 0x00..0xFF")
+
+        # Hardware verified:
+        # RD = destination register
+        # IMM = RAM address
+        # RS = 00
+        return encode(
+            OPCODES["LOAD-MEM"],
+            rd=rd,
+            rs=0,
+            imm=address,
+        )
+
+    # -------------------------
+    # Register-register ALU
+    # ADD Rd, Rs
+    # SUB Rd, Rs
+    # AND Rd, Rs
+    # OR Rd, Rs
+    # XOR Rd, Rs
+    # NOT Rd, Rs
+    # INC Rd, Rs
+    # DEC Rd, Rs
     # -------------------------
     alu_instructions = {
-        "ADD": "ADD",
-        "SUB": "SUB",
-        "AND": "AND",
-        "OR": "OR",
-        "XOR": "XOR",
-        "NOT": "NOT",
-        "INC": "INC",
-        "DEC": "DEC",
+        "MOV",
+        "ADD",
+        "SUB",
+        "AND",
+        "OR",
+        "XOR",
+        "NOT",
+        "INC",
+        "DEC",
     }
 
     if mnemonic in alu_instructions:
-        if len(args) != 2:
+        if len(parts) != 3:
             raise ValueError(f"{mnemonic} syntax: {mnemonic} Rd, Rs")
 
-        rd = parse_register(args[0])
-        rs = parse_register(args[1])
+        rd = parse_register(parts[1])
+        rs = parse_register(parts[2])
 
-        return encode(OPCODES[mnemonic], rd=rd, rs=rs)
+        return encode(
+            OPCODES[mnemonic],
+            rd=rd,
+            rs=rs,
+            imm=0,
+        )
 
     # -------------------------
-    # JMP / JZ
+    # Jump instructions
     # -------------------------
     if mnemonic in ("JMP", "JZ"):
-        if len(args) != 1:
+        if len(parts) != 2:
             raise ValueError(f"{mnemonic} syntax: {mnemonic} address")
 
-        address = parse_number(args[0])
+        address = parse_number(parts[1])
 
         if not 0 <= address <= 0xFF:
-            raise ValueError("Address must fit in 8 bits")
+            raise ValueError("Address must be 0x00..0xFF")
 
-        return encode(OPCODES[mnemonic], imm=address)
+        return encode(
+            OPCODES[mnemonic],
+            rd=0,
+            rs=0,
+            imm=address,
+        )
 
     raise ValueError(f"Unknown instruction: {mnemonic}")
 
 
-def intel_hex_record(address, data):
-    """
-    Create one Intel HEX data record.
-    """
-
-    record_type = 0x00
-    length = len(data)
-
-    values = [
-        length,
-        (address >> 8) & 0xFF,
-        address & 0xFF,
-        record_type,
-        *data,
-    ]
-
-    checksum = (-sum(values)) & 0xFF
-
-    return ":" + "".join(f"{x:02X}" for x in values) + f"{checksum:02X}"
-
-
-def write_intel_hex(words, output_path):
-    """
-    Write 16-bit MIP-8 instruction words as Intel HEX.
-
-    Each instruction occupies two bytes:
-        high byte
-        low byte
-
-    Address 0 = first instruction.
-    """
-
-    data = bytearray()
-
-    for word in words:
-        data.append((word >> 8) & 0xFF)
-        data.append(word & 0xFF)
-
-    lines = []
-
-    # 16 bytes per Intel HEX record
-    chunk_size = 16
-
-    for offset in range(0, len(data), chunk_size):
-        chunk = data[offset : offset + chunk_size]
-
-        # Intel HEX address is a BYTE address.
-        lines.append(intel_hex_record(offset, chunk))
-
-    # End-of-file record
-    lines.append(":00000001FF")
-
-    output_path.write_text("\n".join(lines) + "\n")
-
-
-def assemble_file(input_path):
-    source = input_path.read_text().splitlines()
-
+def assemble(source):
     words = []
 
-    for line_number, line in enumerate(source, start=1):
-        # Remove comments
-        line = line.split(";", 1)[0].strip()
+    for line_number, raw_line in enumerate(source.splitlines(), 1):
+        line = clean_line(raw_line)
 
-        if not line:
+        if line is None:
             continue
 
         try:
-            word = assemble_instruction(line)
-        except ValueError as e:
-            raise ValueError(f"Line {line_number}: {e}") from e
+            word = assemble_line(line)
+        except ValueError as exc:
+            raise ValueError(f"Line {line_number}: {exc}") from exc
 
-        words.append(word)
+        if word is not None:
+            words.append(word)
+
+    if len(words) > 256:
+        raise ValueError("Program exceeds 256 instructions")
 
     return words
 
 
+def intel_hex_record(address, data):
+    record_type = 0x00
+    length = len(data)
+
+    checksum_sum = (
+        length + ((address >> 8) & 0xFF) + (address & 0xFF) + record_type + sum(data)
+    )
+
+    checksum = (-checksum_sum) & 0xFF
+
+    return (
+        f":{length:02X}{address:04X}{record_type:02X}{data.hex().upper()}{checksum:02X}"
+    )
+
+
+def to_intel_hex(words):
+    lines = []
+
+    address = 0
+
+    # Digital ROM is configured for big-endian import.
+    # Therefore each 16-bit instruction is emitted:
+    # high byte, low byte.
+    for word in words:
+        high = (word >> 8) & 0xFF
+        low = word & 0xFF
+
+        lines.append(intel_hex_record(address, bytes([high, low])))
+
+        address += 2
+
+    # EOF record
+    lines.append(":00000001FF")
+
+    return "\n".join(lines) + "\n"
+
+
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python assembler/assembler.py <program.asm>")
+        print("Usage:")
+        print("  python assembler/assembler.py <program.asm>")
         sys.exit(1)
 
     input_path = Path(sys.argv[1])
 
     if not input_path.exists():
-        print(f"File not found: {input_path}")
+        print(f"Error: file not found: {input_path}")
+        sys.exit(1)
+
+    source = input_path.read_text()
+
+    try:
+        words = assemble(source)
+    except ValueError as exc:
+        print(f"Assembly error: {exc}")
         sys.exit(1)
 
     output_path = input_path.with_suffix(".hex")
-
-    try:
-        words = assemble_file(input_path)
-        write_intel_hex(words, output_path)
-
-    except ValueError as e:
-        print(f"Assembly error: {e}")
-        sys.exit(1)
+    output_path.write_text(to_intel_hex(words))
 
     print(f"Assembled {len(words)} instruction(s).")
     print(f"Output: {output_path}")

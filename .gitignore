@@ -36,3 +36,6 @@ logisim-evolution-bin/
 # Logs
 # -----------------------------
 *.log
+
+__pycache__/
+*.pyc

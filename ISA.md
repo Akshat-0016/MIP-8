@@ -1,4 +1,5 @@
 # MIP-8 ISA Specification
+
 Version: 1.1
 
 ---
@@ -8,6 +9,7 @@ Version: 1.1
 MIP-8 (Mini Instruction Processor - 8 bit)
 
 Architecture:
+
 - 8-bit Datapath
 - 16-bit Instructions
 - 8-bit Address Space
@@ -22,11 +24,11 @@ Architecture:
 # Registers
 
 | Binary | Register |
-|--------|----------|
-| 00 | R0 |
-| 01 | R1 |
-| 10 | R2 |
-| 11 | R3 |
+| ------ | -------- |
+| 00     | R0       |
+| 01     | R1       |
+| 10     | R2       |
+| 11     | R3       |
 
 ---
 
@@ -49,15 +51,15 @@ Architecture:
 # ALU Operations
 
 | ALU_SEL | Operation |
-|---------|-----------|
-| 000 | ADD |
-| 001 | SUB |
-| 010 | AND |
-| 011 | OR |
-| 100 | XOR |
-| 101 | NOT |
-| 110 | INC |
-| 111 | DEC |
+| ------- | --------- |
+| 000     | ADD       |
+| 001     | SUB       |
+| 010     | AND       |
+| 011     | OR        |
+| 100     | XOR       |
+| 101     | NOT       |
+| 110     | INC       |
+| 111     | DEC       |
 
 ---
 
@@ -65,24 +67,24 @@ Architecture:
 
 The opcode assignments below describe the implemented MIP-8 hardware decoder.
 
-| Opcode | Mnemonic | Description |
-|--------|----------|-------------|
-| 0000 | NOP | No operation |
-| 0001 | STORE | RAM write |
-| 0010 | LOAD-MEM | RAM read / output enable |
-| 0011 | MOV | Register write |
-| 0100 | ADD | ALU operation |
-| 0101 | SUB | ALU operation |
-| 0110 | AND | ALU operation |
-| 0111 | OR | ALU operation |
-| 1000 | XOR | ALU operation |
-| 1001 | NOT | ALU operation |
-| 1010 | INC | ALU operation |
-| 1011 | DEC | ALU operation |
-| 1100 | LOAD | Immediate or memory load, selected by RS |
-| 1101 | JMP | Jump |
-| 1110 | JZ | Jump if ZERO |
-| 1111 | HALT | Stop processor |
+| Opcode | Mnemonic | Description                              |
+| ------ | -------- | ---------------------------------------- |
+| 0000   | NOP      | No operation                             |
+| 0001   | STORE    | RAM write                                |
+| 0010   | LOAD-MEM | Read data from RAM into a register       |
+| 0011   | MOV      | Register write                           |
+| 0100   | ADD      | ALU operation                            |
+| 0101   | SUB      | ALU operation                            |
+| 0110   | AND      | ALU operation                            |
+| 0111   | OR       | ALU operation                            |
+| 1000   | XOR      | ALU operation                            |
+| 1001   | NOT      | ALU operation                            |
+| 1010   | INC      | ALU operation                            |
+| 1011   | DEC      | ALU operation                            |
+| 1100   | LOAD     | Immediate or memory load, selected by RS |
+| 1101   | JMP      | Jump                                     |
+| 1110   | JZ       | Jump if ZERO                             |
+| 1111   | HALT     | Stop processor                           |
 
 ---
 
@@ -92,10 +94,10 @@ The implemented decoder uses opcode `1100` (`D12`) for LOAD.
 
 The RS field selects the LOAD path:
 
-| RS | LOAD Mode |
-|----|-----------|
-| 00 | Immediate |
-| 11 | Memory |
+| RS  | LOAD Mode |
+| --- | --------- |
+| 00  | Immediate |
+| 11  | Memory    |
 
 The decoder generates register write enable from the LOAD path together with the ALU/register-write instructions.
 
@@ -106,23 +108,23 @@ The decoder generates register write enable from the LOAD path together with the
 The 4-bit opcode is decoded into one-hot signals:
 
 | Signal | Opcode |
-|--------|--------|
-| D0 | 0000 |
-| D1 | 0001 |
-| D2 | 0010 |
-| D3 | 0011 |
-| D4 | 0100 |
-| D5 | 0101 |
-| D6 | 0110 |
-| D7 | 0111 |
-| D8 | 1000 |
-| D9 | 1001 |
-| D10 | 1010 |
-| D11 | 1011 |
-| D12 | 1100 |
-| D13 | 1101 |
-| D14 | 1110 |
-| D15 | 1111 |
+| ------ | ------ |
+| D0     | 0000   |
+| D1     | 0001   |
+| D2     | 0010   |
+| D3     | 0011   |
+| D4     | 0100   |
+| D5     | 0101   |
+| D6     | 0110   |
+| D7     | 0111   |
+| D8     | 1000   |
+| D9     | 1001   |
+| D10    | 1010   |
+| D11    | 1011   |
+| D12    | 1100   |
+| D13    | 1101   |
+| D14    | 1110   |
+| D15    | 1111   |
 
 Implemented control signals:
 
@@ -182,6 +184,7 @@ Registers: 4
 Width: 8 bits
 
 Ports:
+
 - 2 Read Ports
 - 1 Write Port
 
@@ -210,6 +213,7 @@ RD_DATA2(8)
 Width: 8 bits
 
 Functions:
+
 - Increment
 - Jump
 - Reset
